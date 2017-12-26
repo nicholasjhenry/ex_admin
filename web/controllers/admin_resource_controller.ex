@@ -76,8 +76,13 @@ defmodule ExAdmin.AdminResourceController do
     model = defn.__struct__
     resource = conn.assigns.resource
 
-    changeset = defn.resource_model.changeset(resource, params[defn.resource_name])
+    # changeset = defn.resource_model.changeset(resource, params[defn.resource_name])
     #apply(defn.resource_model, defn.create_changeset, [resource, params[defn.resource_name]])
+    changeset = if defn.changesets[:create] do
+      defn.changesets[:create].(resource, params[defn.resource_name])
+    else
+      defn.resource_model.changeset(resource, params[defn.resource_name])
+    end
 
     case ExAdmin.Repo.insert(changeset) do
       {:error, changeset} ->
@@ -94,7 +99,13 @@ defmodule ExAdmin.AdminResourceController do
     resource = conn.assigns.resource
 
     # changeset = apply(defn.resource_model, defn.update_changeset, [resource, params[defn.resource_name]])
-    changeset = defn.resource_model.changeset(resource, params[defn.resource_name])
+    # changeset = defn.resource_model.changeset(resource, params[defn.resource_name])
+    changeset = if defn.changesets[:update] do
+      defn.changesets[:update].(resource, params[defn.resource_name])
+    else
+      defn.resource_model.changeset(resource, params[defn.resource_name])
+    end
+
     case ExAdmin.Repo.update(changeset) do
       {:error, changeset} ->
         conn |> handle_changeset_error(defn, changeset, params)
